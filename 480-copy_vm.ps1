@@ -1,5 +1,5 @@
 #Connect
-$vserver="480vcenter.guinther.local"
+$vserver="10.0.17.3"
 Connect-VIServer($vserver)
 
 
@@ -19,17 +19,15 @@ function Copy-VM(){
     # - file and used with the other function, this one is just all in one file.
     #######################################
 
-    $vm_host = Get-VMHost -Name "esxiguinther"
+    $vm_host = Get-VMHost -Name "192.168.7.34"
     $datastore = Get-Datastore -Name "datastore1"
-    $target_vm = Get-VM "dc1-sam.guinther.local"
+    $target_vm = Get-VM "DC1"
     $snap = Get-Snapshot -VM $target_vm -Name "Base"
     #$dest_folder = Get-Folder -Name $dest_folder
-    $linkedname = "{0}.linked" -f $target_vm.name
-    $linkedvm = New-VM -LinkedClone -Name $linkedname -VM $target_vm -ReferenceSnapshot $snap -VMHost $vm_host -Datastore $datastore
-    $new_vm = New-VM -Name "dc2-sam" -VM $linkedvm -VMHost $vm_host -Datastore $datastore 
+    $newvmname = Read-Host -prompt "what is the new vm's name?"
+    $new_vm = New-VM -Name $newvmname -VM $target_vm -LinkedClone -ReferenceSnapshot $snap -VMHost $vm_host -Datastore $datastore 
     $new_vm | new-snapshot -Name "Base"
-    $linkedvm | Remove-VM
+    Read-Host -Prompt "exit"
 
 }
-
 Copy-VM
