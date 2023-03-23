@@ -1,0 +1,2 @@
+snapshot,dest_name,datastore,dest_network,dest_folder,vm_host,target_vm,count
+Base,dcCopy,datastore1,480-wan,test,192.168.7.34,DC1,3
