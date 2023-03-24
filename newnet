@@ -1,19 +1,8 @@
-# Function to create a new virtual switch and port group
-function New-VirtualSwitchAndPortGroup {
-    param (
-        [Parameter(Mandatory=$true)]
-        [string]$SwitchName,
-        [Parameter(Mandatory=$true)]
-        [string]$PortGroupName,
-        [Parameter(Mandatory=$true)]
-        [string]$AdapterName,
-        [Parameter(Mandatory=$true)]
-        [string]$AdapterIPAddress,
-        [string]$AdapterSubnetMask = "255.255.255.0"
-    )
-
-    # Get the host object
+# Get the host object
     $host = Get-VMHost
+
+    # Get the network adapter object
+    $adapter = Get-VMHostNetworkAdapter -VMHost $host -Name $AdapterName
 
     # Create a new virtual switch
     New-VirtualSwitch -VMHost $host -Name $SwitchName -NumPorts 128 -Confirm:$false
@@ -21,13 +10,8 @@ function New-VirtualSwitchAndPortGroup {
     # Create a new port group on the virtual switch
     New-VirtualPortGroup -VirtualSwitch (Get-VirtualSwitch -VMHost $host -Name $SwitchName) -Name $PortGroupName -VLanId 0
 
-    # Get the network adapter object
-    $adapter = Get-VMHostNetworkAdapter -VMHost $host -Name $AdapterName
-
     # Create a new virtual NIC and connect it to the port group
     $nic = New-VMHostNetworkAdapter -PortGroup $PortGroupName -VirtualSwitch $SwitchName -VMHost $host -Confirm:$false
 
     # Configure the IP address and subnet mask on the virtual NIC
     $nic | Set-VMHostNetworkAdapter -IP $AdapterIPAddress -SubnetMask $AdapterSubnetMask -Confirm:$false
-}
-
