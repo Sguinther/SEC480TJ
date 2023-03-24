@@ -1,17 +1,24 @@
-# Get the host object
-    $host = Get-VMHost
+Function Get-IP {
+    Param(
+        [Parameter(Mandatory=$true)]
+        [string]$VMName
+    )
 
-    # Get the network adapter object
-    $adapter = Get-VMHostNetworkAdapter -VMHost $host -Name $AdapterName
+    # Get VM object
+    $vm = Get-VM -Name $VMName
 
-    # Create a new virtual switch
-    New-VirtualSwitch -VMHost $host -Name $SwitchName -NumPorts 128 -Confirm:$false
+    # Get network adapter object
+    $nic = Get-NetworkAdapter -VM $vm | Select -First 1
 
-    # Create a new port group on the virtual switch
-    New-VirtualPortGroup -VirtualSwitch (Get-VirtualSwitch -VMHost $host -Name $SwitchName) -Name $PortGroupName -VLanId 0
+    # Get IP address, VM name, and MAC address
+    $ipAddress = $nic.IPAddress
+    $vmName = $vm.Name
+    $macAddress = $nic.MacAddress
 
-    # Create a new virtual NIC and connect it to the port group
-    $nic = New-VMHostNetworkAdapter -PortGroup $PortGroupName -VirtualSwitch $SwitchName -VMHost $host -Confirm:$false
-
-    # Configure the IP address and subnet mask on the virtual NIC
-    $nic | Set-VMHostNetworkAdapter -IP $AdapterIPAddress -SubnetMask $AdapterSubnetMask -Confirm:$false
+    # Output results
+    [PSCustomObject]@{
+        "IPAddress" = $ipAddress
+        "VMName" = $vmName
+        "MACAddress" = $macAddress
+    }
+}
