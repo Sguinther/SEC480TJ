@@ -16,7 +16,7 @@ function 480banner() {
 }
 ################################################################################################################
 ################################################################################################################
-function connect480([string] $server) {
+function connect-480([string] $server) {
     $conn = $global:DefaultVIServer
     if ($conn){
         $msg = "Already connected to: {0}" -f $conn
@@ -41,6 +41,7 @@ function Get-480Config([string] $config_path){
 ################################################################################################################
 ################################################################################################################
 function Copy-VM(){
+    [cmdletbinding()]
     #[cmdletbinding()]
     #param(
        # $dest_name,
@@ -114,7 +115,7 @@ function Copy-Snapshot{
 ################################################################################################################
 ################################################################################################################
 function Set-IPInventory{
-
+    
     #This function creates an inventory file of the created machines.
     #This function is dynamic as it deletes the previous inventory file everytime it runs.
     # - This allows the function to dynamically target the hosts created in each process and feed that info to ansible
@@ -134,4 +135,86 @@ function Set-IPInventory{
     }
 }
 ################################################################################################################
+################################################################################################################
+function New-Network {
+    [cmdletbinding()]
+    param (
+        [string]$switchname,
+        [string]$portgroupname,
+        #[string]$adaptername,
+        #[string]$adapterip,
+        [string]$adaptersubnetmask = '255.255.255.0'
+        )
+
+    # Get the host object
+    $VMhost = Get-VMHost
+
+    # Get the network adapter object
+    #$adapter = Get-VMHostNetworkAdapter -VMHost $VMhost -Name $AdapterName
+
+    # Create a new virtual switch
+    New-VirtualSwitch -VMHost $VMhost -Name $SwitchName -NumPorts 128 -Confirm:$false
+
+    # Create a new port group on the virtual switch
+    New-VirtualPortGroup -VirtualSwitch (Get-VirtualSwitch -VMHost $VMhost -Name $SwitchName) -Name $PortGroupName -VLanId 0
+
+    # Create a new virtual NIC and connect it to the port group
+    #$nic = New-VMHostNetworkAdapter -PortGroup $PortGroupName -VirtualSwitch $SwitchName -VMHost $VMhost -Confirm:$false
+
+    # Configure the IP address and subnet mask on the virtual NIC
+    #$nic | Set-VMHostNetworkAdapter -IP $AdapterIPAddress -SubnetMask $AdapterSubnetMask -Confirm:$false
+}
+
+
+Function Get-IP {
+    [cmdletbinding()]
+    Param(
+        [Parameter(Mandatory=$true)]
+        [string]$VMName
+    )
+
+    # Get VM object
+    $vm = Get-VM -Name $VMName
+
+    # Get network adapter object
+    $nic = Get-NetworkAdapter -VM $vm #| Select -First 1
+
+    # Get IP address, VM name, and MAC address
+    $ipAddress = $nic.IPAddress
+    $vmName = $vm.Name
+    $macAddress = $nic.MacAddress
+
+    # Output results
+    [PSCustomObject]@{
+        "IPAddress" = $ipAddress
+        "VMName" = $vmName
+        "MACAddress" = $macAddress
+    }
+}
+
+
+function VM-Starter{
+    [cmdletbinding()]
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$vmName
+    )
+
+    # Get VM name from user input
+    $vmName = Read-Host "Enter VM name to start"
+
+    # Get VM object by name
+    $vm = Get-VM -Name $vmName
+
+    # Check if VM exists
+    if ($vm) {
+    # Start VM
+    Start-VM -VM $vm
+    Write-Host "VM $vmName started."
+    } else {
+    Write-Host "VM $vmName not found."
+    }
+}
+
+
 480banner
