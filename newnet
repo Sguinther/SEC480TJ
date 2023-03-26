@@ -1,24 +1,14 @@
-Function Get-IP {
-    Param(
-        [Parameter(Mandatory=$true)]
-        [string]$VMName
-    )
+# Get VM name from user input
+$vmName = Read-Host "Enter VM name to start"
 
-    # Get VM object
-    $vm = Get-VM -Name $VMName
+# Get VM object by name
+$vm = Get-VM -Name $vmName
 
-    # Get network adapter object
-    $nic = Get-NetworkAdapter -VM $vm | Select -First 1
-
-    # Get IP address, VM name, and MAC address
-    $ipAddress = $nic.IPAddress
-    $vmName = $vm.Name
-    $macAddress = $nic.MacAddress
-
-    # Output results
-    [PSCustomObject]@{
-        "IPAddress" = $ipAddress
-        "VMName" = $vmName
-        "MACAddress" = $macAddress
-    }
+# Check if VM exists
+if ($vm) {
+  # Start VM
+  Start-VM -VM $vm
+  Write-Host "VM $vmName started."
+} else {
+  Write-Host "VM $vmName not found."
 }
