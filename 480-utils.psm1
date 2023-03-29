@@ -41,7 +41,7 @@ function Get-480Config([string] $config_path){
 ################################################################################################################
 ################################################################################################################
 function Copy-VM(){
-    [cmdletbinding()]
+    
     #[cmdletbinding()]
     #param(
        # $dest_name,
@@ -59,13 +59,13 @@ function Copy-VM(){
 
     $vm_host = Get-VMHost -Name "192.168.7.34"
     $datastore = Get-Datastore -Name "datastore1"
-    $target_vm = Get-VM "DC1"
+    $target_vm = Get-VM "480-fw1"
     $snap = Get-Snapshot -VM $target_vm -Name "Base"
     #$dest_folder = Get-Folder -Name $dest_folder
     $newvmname = Read-Host -prompt "what is the new vm's name?"
     $new_vm = New-VM -Name $newvmname -VM $target_vm -LinkedClone -ReferenceSnapshot $snap -VMHost $vm_host -Datastore $datastore 
     $new_vm | new-snapshot -Name "Base"
-    Read-Host -Prompt "exit"
+    
 
 }
 ################################################################################################################
@@ -164,8 +164,8 @@ function New-Network {
     # Configure the IP address and subnet mask on the virtual NIC
     #$nic | Set-VMHostNetworkAdapter -IP $AdapterIPAddress -SubnetMask $AdapterSubnetMask -Confirm:$false
 }
-
-
+################################################################################################################
+################################################################################################################
 Function Get-IP {
     [cmdletbinding()]
     Param(
@@ -177,22 +177,24 @@ Function Get-IP {
     $vm = Get-VM -Name $VMName
 
     # Get network adapter object
-    $nic = Get-NetworkAdapter -VM $vm #| Select -First 1
+    $nic = Get-NetworkAdapter -VM $vm #| Select-Object -First 1
 
     # Get IP address, VM name, and MAC address
-    $ipAddress = $nic.IPAddress
+    #$ipAddress = $nic.IPAddress
     $vmName = $vm.Name
     $macAddress = $nic.MacAddress
 
+    $ipaddr = (Get-VM -Name $vm).Guest.IPAddress[0]
+    
     # Output results
     [PSCustomObject]@{
-        "IPAddress" = $ipAddress
+        "IPAddress" = $ipaddr
         "VMName" = $vmName
         "MACAddress" = $macAddress
     }
 }
-
-
+################################################################################################################
+################################################################################################################
 function VM-Starter{
     [cmdletbinding()]
     param(
@@ -215,6 +217,18 @@ function VM-Starter{
     Write-Host "VM $vmName not found."
     }
 }
+################################################################################################################
+################################################################################################################
+function Set-Network{
+    [cmdletbinding()]
+    param(
+        [Parameter(Mandatory=$true)]
+        [string]$vmName,
+        [string]$netname
+    )
 
+    Get-Vm -Name $vmName | Get-NetworkAdapter | Set-NetworkAdapter -NetworkName $netname -Confirm:$false
+}
+################################################################################################################
 
 480banner
