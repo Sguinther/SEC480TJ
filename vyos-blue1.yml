@@ -19,5 +19,5 @@
       - set service dhcp-server shared-network-name {{ network1 }} subnet {{ lan }} name-server '{{ dhcpserver }}'
       - set service dhcp-server shared-network-name {{ network1 }} subnet {{ lan }} domain-name '{{ domain1 }}'
       - set service dhcp-server shared-network-name {{ network1 }} subnet {{ lan }} lease '86400'
-      - set service dhcp-server shared-network-name {{ network1 }} subnet {{ lan }} range {{ network }}-POOL start '10.0.5.150'
-      - set service dhcp-server shared-network-name {{ network1 }} subnet {{ lan }} range {{ network }}-POOL stop '10.0.5.200'
+      - set service dhcp-server shared-network-name {{ network1 }} subnet {{ lan }} range {{ network1 }}-POOL start '10.0.5.150'
+      - set service dhcp-server shared-network-name {{ network1 }} subnet {{ lan }} range {{ network1 }}-POOL stop '10.0.5.200'
