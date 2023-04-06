@@ -1,0 +1,23 @@
+- name: vyos blue1 net config
+  hosts: vyos
+  tasks:
+  - name: Vyos version info
+    vyos_command:
+      commands: show version
+    register: version
+  - debug:
+      var: version.stdout_lines
+  
+
+  - name: configure vyos dhcp
+    vyos_config:
+      save: yes
+      lines:
+      - set service dhcp-server global-parameters 'local-address {{ lan_ip }};'
+      - set service dhcp-server shared-network-name {{ network1 }} authoritative
+      - set service dhcp-server shared-network-name {{ network1 }} subnet {{ lan }} default-router '{{ lan_ip }}'
+      - set service dhcp-server shared-network-name {{ network1 }} subnet {{ lan }} name-server '{{ dhcpserver }}'
+      - set service dhcp-server shared-network-name {{ network1 }} subnet {{ lan }} domain-name '{{ domain1 }}'
+      - set service dhcp-server shared-network-name {{ network1 }} subnet {{ lan }} lease '86400'
+      - set service dhcp-server shared-network-name {{ network1 }} subnet {{ lan }} range {{ network }}-POOL start '10.0.5.150'
+      - set service dhcp-server shared-network-name {{ network1 }} subnet {{ lan }} range {{ network }}-POOL stop '10.0.5.200'

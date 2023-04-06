@@ -1,0 +1,17 @@
+vyos:
+  hosts:
+    10.0.17.200:
+      hostname: fw1-blue
+      lan_ip: 10.0.5.2
+      lan: 10.0.5.0/24
+      dhcpserver: 10.0.5.5
+      network1: BLUE1-LAN
+      domain1: blue1.local
+      mac: 00:50:56:bd:31:ba
+
+  
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+    ansible_connection: network_cli
+    ansible_network_os: vyos
+    ansible_user: vyos
