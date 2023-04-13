@@ -1,0 +1,20 @@
+#usage:ansible-playbook install_winlogbeat.yml -i inventory.ini -l win10
+- name: Install Winlogbeat on Windows 10
+  hosts: win10
+  gather_facts: no
+  tasks:
+    - name: Copy Winlogbeat files
+      win_copy:
+        src: C:/winlogbeat/
+        dest: C:/
+        recurse: yes
+
+    - name: Configure Winlogbeat
+      win_copy:
+        src: C:/winlogbeat/winlogbeat.yml
+        dest: C:/Winlogbeat/winlogbeat.yml
+
+    - name: Start Winlogbeat service
+      win_service:
+        name: winlogbeat
+        state: started

@@ -1,0 +1,7 @@
+[win10]
+192.168.1.122
+
+
+vars:
+  ansible_user: scenario-adm
+  passwud: 3fZrdcjm5Xf1hNPEwLen
