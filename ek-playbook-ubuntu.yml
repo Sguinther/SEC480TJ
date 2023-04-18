@@ -1,0 +1,61 @@
+---
+- name: Install ELK Stack
+  hosts: elk
+  become: true
+  tasks:
+    - name: Install Java
+      apt:
+        name: default-jdk
+        state: present
+
+    - name: Install Elasticsearch
+      apt:
+        name: elasticsearch
+        state: present
+
+    - name: Configure Elasticsearch
+      template:
+        src: elasticsearch.yml.j2
+        dest: /etc/elasticsearch/elasticsearch.yml
+      notify:
+        - Restart Elasticsearch
+
+    - name: Install Logstash
+      apt:
+        name: logstash
+        state: present
+
+    - name: Configure Logstash
+      template:
+        src: logstash.conf.j2
+        dest: /etc/logstash/conf.d/logstash.conf
+      notify:
+        - Restart Logstash
+
+    - name: Install Kibana
+      apt:
+        name: kibana
+        state: present
+
+    - name: Configure Kibana
+      template:
+        src: kibana.yml.j2
+        dest: /etc/kibana/kibana.yml
+      notify:
+        - Restart Kibana
+
+  handlers:
+    - name: Restart Elasticsearch
+      service:
+        name: elasticsearch
+        state: restarted
+
+    - name: Restart Logstash
+      service:
+        name: logstash
+        state: restarted
+
+    - name: Restart Kibana
+      service:
+        name: kibana
+        state: restarted

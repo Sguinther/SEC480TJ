@@ -1,0 +1,28 @@
+--- 
+- name: Install Beats Agent
+  hosts: beats_agent
+  become: true
+  tasks:
+    - name: Install Filebeat
+      apt:
+        name: filebeat
+        state: present
+
+    - name: Configure Filebeat
+      template:
+        src: filebeat.yml.j2
+        dest: /etc/filebeat/filebeat.yml
+      notify:
+        - Restart Filebeat
+
+    - name: Start Filebeat service
+      service:
+        name: filebeat
+        state: started
+        enabled: yes
+
+  handlers:
+    - name: Restart Filebeat
+      service:
+        name: filebeat
+        state: restarted
