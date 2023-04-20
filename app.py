@@ -1,42 +1,76 @@
-try:
-    from flask import Flask,render_template,url_for,request,redirect, make_response
-    import random
-    import json
-    from time import time
-    from random import random
-    from flask import Flask, render_template, make_response
-    from flask_dance.contrib.github import make_github_blueprint, github
-except Exception as e:
-    print("Some Modules are Missings {}".format(e))
+from requests_oauthlib import OAuth2Session
+from flask import Flask, request, redirect, session, url_for
+from flask.json import jsonify
+import os
+import json
+
+
+
 fileObject = open("creds.json", "r")
 jsoncontent = fileObject.read()
 creds = json.loads(jsoncontent) 
 
-
-
 app = Flask(__name__)
-app.config["SECRET_KEY"]="SECRET KEY"
-
-github_blueprint = make_github_blueprint(client_id=creds['client_id'],
-                                         client_secret=creds['client_secret'])
-
-app.register_blueprint(github_blueprint, url_prefix='/github_login')
 
 
-@app.route('/')
-def github_login():
+# This information is obtained upon registration of a new GitHub OAuth
+# application here: https://github.com/settings/applications/new
+client_id = creds['client_id']
+client_secret = creds['client_secret']
+authorization_base_url = 'https://github.com/login/oauth/authorize'
+token_url = 'https://github.com/login/oauth/access_token'
 
-    if not github.authorized:
-        return redirect(url_for('github.login'))
-    else:
-        account_info = github.get('/user')
-        if account_info.ok:
-            account_info_json = account_info.json()
-            return '<h1>Your Github name is {}'.format(account_info_json['login'])
 
-    return '<h1>Request failed!</h1>'
+@app.route("/")
+def demo():
+    """Step 1: User Authorization.
+
+    Redirect the user/resource owner to the OAuth provider (i.e. Github)
+    using an URL with a few key OAuth parameters.
+    """
+    github = OAuth2Session(client_id)
+    authorization_url, state = github.authorization_url(authorization_base_url)
+
+    # State is used to prevent CSRF, keep this for later.
+    session['oauth_state'] = state
+    return redirect(authorization_url)
+
+
+# Step 2: User authorization, this happens on the provider.
+
+@app.route("/callback", methods=["GET"])
+def callback():
+    """ Step 3: Retrieving an access token.
+
+    The user has been redirected back from the provider to your registered
+    callback URL. With this redirection comes an authorization code included
+    in the redirect URL. We will use that to obtain an access token.
+    """
+
+    github = OAuth2Session(client_id, state=session['oauth_state'])
+    token = github.fetch_token(token_url, client_secret=client_secret,
+                               authorization_response=request.url)
+
+    # At this point you can fetch protected resources but lets save
+    # the token and show how this is done from a persisted token
+    # in /profile.
+    session['oauth_token'] = token
+
+    return redirect(url_for('.profile'))
+
+
+@app.route("/profile", methods=["GET"])
+def profile():
+    """Fetching a protected resource using an OAuth 2 token.
+    """
+    github = OAuth2Session(client_id, token=session['oauth_token'])
+    return jsonify(github.get('https://api.github.com/user').json())
 
 
 if __name__ == "__main__":
-    #app.run(debug=True)
+    # This allows us to use a plain HTTP callback
+    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = "1"
+
+    app.secret_key = os.urandom(24)
+    # app.run(debug=True)
     app.run(ssl_context="adhoc")
