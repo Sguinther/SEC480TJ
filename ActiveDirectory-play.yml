@@ -1,0 +1,38 @@
+- name: Install Active Directory Services
+  hosts: ad_servers
+  become: true
+  vars:
+    domain_name: blue1.local
+    admin_password: P@ssw0rd1
+  tasks:
+    - name: Install Active Directory Domain Services role
+      win_feature:
+        name: AD-Domain-Services
+        state: present
+
+    - name: Promote server to domain controller
+      win_domain_controller:
+        domain_name: "{{ domain_name }}"
+        safe_mode_password: "{{ admin_password }}"
+        install_dns: yes
+        domain_level: 4
+        forest_level: 4
+        state: domain_controller
+
+    - name: Reboot the server
+      win_reboot:
+        reboot_timeout: 600
+        msg: "Rebooting to complete Active Directory installation"
+
+    - name: Wait for server to come back online
+      wait_for_connection:
+        delay: 10
+        timeout: 300
+
+    - name: Check if domain controller is reachable
+      win_ping:
+        data: "{{ inventory_hostname }}"
+
+    - name: Print domain controller info
+      debug:
+        var: ansible_facts.ansible_domain_controller 
